@@ -1,0 +1,62 @@
+/*Se realizaron reservas de hoteles en la ciudad de Nápoles que se pagaron a
+través de tarjetas de crédito y queremos conocer los datos de la tarjeta (el
+nombre del titular, número y entidad que emite la tarjeta), nombre del hotel y la
+fecha de checkin.*/
+
+SELECT nombre_titular, numero AS "Numero de Tarjeta", entidad_finaciera.nombre AS "Entidad Financiera", hoteles.nombre AS "Nombre del Hotel", hotelesxreserva.checkin FROM hotelesxreserva 
+INNER JOIN hoteles ON hotelesxreserva.idhotel = hoteles.idhotel
+INNER JOIN reservas ON hotelesxreserva.idreserva = reservas.idreserva 
+INNER JOIN pagos ON reservas.idpago = pagos.idpago
+INNER JOIN tarjeta ON tarjeta.idtarjeta = pagos.idtarjeta
+INNER JOIN entidad_finaciera ON entidad_finaciera.identidad = tarjeta.identidad
+INNER JOIN metodospago ON metodospago.idmetodospago = pagos.idmetodospago
+WHERE hoteles.ciudad LIKE "%Napoles%" AND metodospago.nombre LIKE "%tarjeta de credito%";
+
+/*Listar el número de pago (idpago), la cantidad de cuotas, el número de tarjeta,
+nombre y país de la entidad financiera de todas las reservas realizadas con
+tarjeta de crédito teniendo en cuenta que el precio no supere los 1500.*/
+
+SELECT pagos.idpago, pagos.cantidadcuotas, tarjeta.numero AS "Numero de Tarjeta", entidad_finaciera.nombre AS "Entidad Financiera", entidad_finaciera.idpais AS "Pais de Entidad Financiera" FROM pagos 
+INNER JOIN tarjeta ON tarjeta.idtarjeta = pagos.idtarjeta
+INNER JOIN metodospago ON metodospago.idmetodospago = pagos.idmetodospago
+INNER JOIN entidad_finaciera ON entidad_finaciera.identidad = tarjeta.identidad
+INNER JOIN paises ON paises.idpais = entidad_finaciera.idpais
+WHERE metodospago.nombre LIKE "%tarjeta de crédito%" AND pagos.preciototal <= 1500;
+
+/*Mostrar por cada entidad financiera la cantidad de pagos realizados. Se pide
+visualizar el nombre de la entidad financiera y el total.*/
+SELECT entidad_finaciera.nombre AS "Entidad Financiera", COUNT(idpago) AS "Total de pagos" FROM entidad_finaciera 
+INNER JOIN tarjeta ON tarjeta.identidad = entidad_finaciera.identidad
+INNER JOIN pagos ON tarjeta.idtarjeta = pagos.idtarjeta
+GROUP BY entidad_finaciera.nombre;
+
+/*Listar las reservas de los clientes cuyo pago lo hicieron a través de tarjeta de
+crédito*/
+SELECT * FROM reservas
+INNER JOIN clientes ON clientes.idcliente = reservas.idcliente
+INNER JOIN pagos ON pagos.idpago = reservas.idpago
+INNER JOIN metodospago ON metodospago.idmetodospago = pagos.idmetodospago
+WHERE metodospago.nombre LIKE "%tarjeta de crédito%";
+
+/*Necesitamos conocer todas las reservas de hoteles que se realizaron a través de
+las tarjetas de crédito que pertenecen al Banco de la Provincia de Buenos Aires.
+Mostrar el nombre de la entidad financiera, número de tarjeta, nombre del
+titular de la tarjeta, el nombre y ciudad del hotel.*/
+SELECT entidad_finaciera.nombre AS "Nombre Entidad Financiera", tarjeta.numero AS "Numero Tarjeta", tarjeta.nombre_titular AS "Nombre Titular", hoteles.nombre AS "Nombre del Hotel", hoteles.ciudad AS "Ciudad del Hotel" FROM reservas
+INNER JOIN clientes ON clientes.idcliente = reservas.idcliente
+INNER JOIN pagos ON pagos.idpago = reservas.idpago
+INNER JOIN hotelesxreserva ON hotelesxreserva.idreserva = reservas.idreserva
+INNER JOIN hoteles ON hoteles.idhotel = hotelesxreserva.idhotel
+INNER JOIN tarjeta ON tarjeta.idtarjeta = pagos.idtarjeta
+INNER JOIN entidad_finaciera ON tarjeta.identidad = entidad_finaciera.identidad
+INNER JOIN metodospago ON metodospago.idmetodospago = pagos.idmetodospago
+WHERE metodospago.nombre LIKE "%tarjeta de crédito%" AND entidad_finaciera.nombre LIKE "%Banco de la Provincia de Buenos Aires%";
+
+/*Listar la cantidad de reservas realizadas de acuerdo al método de pago y el
+nombre completo del cliente.*/
+
+SELECT metodospago.nombre AS "Metodo de Pago", COUNT(pagos.idpago) AS "Cantidad de Pagos", clientes.nombres AS "Nombre del Cliente" FROM reservas
+INNER JOIN clientes ON clientes.idcliente = reservas.idcliente
+INNER JOIN pagos ON reservas.idpago = pagos.idpago
+INNER JOIN metodospago ON metodospago.idmetodospago = pagos.idmetodospago
+GROUP BY metodospago.nombre, clientes.nombres;
